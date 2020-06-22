@@ -3,10 +3,13 @@
 ## Demo
 
 This software is hosted at both:
+
 https://www.nanometadata.com/ - Should be trusted but does not have a transparent build process to publish, clientside files are built and pushed on the backend at stable releases
+
 https://metadata.linuxserver.io/ - This is transparently built here on Github and published using Github pages, if you are worried about digging into source code to verify it, especially because it is published minified you should use this endpoint 
 
 The server side API component is hosted at https://api.nanometadata.com/metadata . 
+
 If you want to host this yourself you need to have a basic underlying understanding of AWS and it's services the full stack is a combination of: 
 * AWS Cloudfront - Used to serve the clientside demo signing app and all metadta files in a caching worldwide CDN
 * AWS S3 - Backend data storage behind Coudfront
@@ -19,14 +22,17 @@ This project consists of two parts with the end goal of being able to store arbi
 * Server side - A simple API designed around serverless infrascructure using Lambda, S3 and Cloudfront from AWS
 * Client side - A browser based pure clientside form a user can use to form and send the api request by signing the arbitrary data they want to store for a transaction with the private key associated with the account
 
-This configuration is centrally managed due to the nature of storing arbitrary data and needing to respond to DMCA requests if applicable. The data size is intentionally limited to 32 bytes using this service to prevent merkle trees. This does not mean it is impossible to store larger datasets by defining and crawling a transaction range for metadata, but it complicates the ingestion process and reduces the overall responsibility of the person running the service. 
+This configuration is centrally managed due to the nature of storing arbitrary data and needing to respond to DMCA requests if applicable. The data size is intentionally limited to 32 bytes using this service to prevent merkle trees. This does not mean it is impossible to store larger datasets by defining and crawling a transaction range for metadata, but it complicates the ingestion process and reduces the overall responsibility of the person running the service.
+ 
 At it's core though just because you are centrally storing and verifying information for upload does not mean that the information is not decentralized in nature. The data is stored in a format that can be verified by anyone ingesting it to know with 100% certainty that the person who added the data to the Nano transaction is in fact the bearer of that private key and in turn the public key used for verification. 
 The data is also signed and verified using the same process a Nano Node uses to verify a new Block, so no credentials are ever exposed to the central authority or any other clients and can be contained within a local client session for signing.
+
 Because this setup uses pub/private key verification strategy and the transaction hash is it's unique identifier, you are able to store any transaction hash across any Nano compatible network not only the Live Nano network. 
 
 ## Client side
 
 The browser based application hosted in the repository will always be compatible with the Metadata API server side, but that does not mean you need to run this specific software to form and send API requests to the central service.
+
 From a cryptographic side this is the basic process:
 1. Client sets the needed information (transaction hash, their private key, and the metadata they want to sign and store)
 2. The client creates a blake2sHex hash of the concatted transaction hash and their hex encoded metdata
@@ -47,6 +53,7 @@ The API request to the Lambda function behind API Gateway is GET with URL parame
 ## Server side
 
 The code for the server side component can be found in the `lambda` folder of this repository.
+
 On the server side we are performing the same sanity checks as any other client would be to verify this was actually signed by the owner of that account using its pubkey, with one exception being reaching into a Nano network node and confirming the `block_account` for that transaction hash is actually owned by the user that is signing. This acts as their authentication without any complex user management, the blockchain speaks for itself.
  
 The basic process is: 
