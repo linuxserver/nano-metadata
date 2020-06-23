@@ -17,7 +17,12 @@
           <span class="input-group-text" v-text="(hexmax - hex.length)"></span>
         </div>
       </div>
-      <input class="form-control" type="password" placeholder="Seed" v-model="seed">
+      <div class="form-group input-group">
+        <input class="form-control col-10" type="password" placeholder="Seed" v-model="seed">
+        <div class="input-group-append" style="width: 60px;">
+          <input class="form-control" type="number" min="0" v-model="seedindex">
+        </div>
+      </div>
       <input class="form-control" type="text" placeholder="Transaction Hash" v-model="trans">
       <select class="custom-select mr-sm-2" v-model="net">
         <option value="" disabled>Select your network</option>
@@ -65,7 +70,8 @@ export default {
       apiurl: '',
       net: '',
       metaurl: '',
-      loading: false
+      loading: false,
+      seedindex: 0
     }
   },
   watch: {
@@ -93,7 +99,7 @@ export default {
           that.loading = false
         } else {
           const hash = blake2sHex(that.trans + that.hex).toUpperCase()
-          const privkey = NanoCurrency.deriveSecretKey(that.seed,0)
+          const privkey = NanoCurrency.deriveSecretKey(that.seed,that.seedindex)
           const pubkey = NanoCurrency.derivePublicKey(privkey)
           const sig = NanoCurrency.signBlock({ hash: hash, secretKey: privkey })
           const params = 'trans=' + that.trans + '&data=' + that.hex + '&pub=' + pubkey + '&sig=' + sig + '&net=' + that.net
