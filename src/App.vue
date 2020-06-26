@@ -2,17 +2,16 @@
 <div id="app">
   <notifications position="top center"/>
   <div class="heading">
-    <h1>Add Metadata to a Transaction</h1>
-    <h4>32 characters UTF-8 or 64 HEX (32 Bytes)</h4>
+    <h4>Add Metadata to transaction</h4>
   </div>
-  <div class="container border">
+  <div class="container">
     <div class="form-group">
       <div class="input-group">
-        <input type="text" class="form-control" placeholder="Meta Data in utf-8" :maxlength="utfmax" v-model="utf8" />
+        <input type="text" class="form-control" placeholder="utf-8" :maxlength="utfmax" v-model="utf8" />
         <div class="input-group-append">
           <span class="input-group-text" v-text="(utfmax - utf8.length)"></span>
         </div>
-        <input type="text" class="form-control" placeholder="Meta Data in Hex" :maxlength="hexmax" v-model="hex" />
+        <input type="text" class="form-control" placeholder="hex" :maxlength="hexmax" v-model="hex" />
         <div class="input-group-append">
           <span class="input-group-text" v-text="(hexmax - hex.length)"></span>
         </div>
@@ -38,7 +37,7 @@
       </div>
     </div>
   </div>
-  <div class="container border">
+  <div class="container">
     <div class="col">
       <div class="form-group">
         <label for="apiurl">API URL: <font-awesome-icon @click="copyToClipboard(apiurl)" icon="clone" /></label>
@@ -151,8 +150,57 @@ export default {
 
 <style lang="scss">
 @import '~bootstrap/scss/bootstrap';
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@200;400;700&display=swap');
+// Body
+$body-bg1: #4d5879;
+$body-bg2: #26314e;
+// Typography
+$font-family-sans-serif: "Nunito", sans-serif;
+$font-size-base: 16px;
+$line-height-base: 1.6;
+// Colors
+$active: #0075c2;
+$text: #a7b0ca;
+$lighter-text: #959da0;
+$highlight: #59c7f1;
+$highlightsemi: #59c7f1bb;
+$highlight2: #af73d2;
+$highlight3: #e2ac39;
+html, body {
+    background: linear-gradient(to bottom, $body-bg1, $body-bg2);
+    color: $text;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 700;
+    font-size: $font-size-base;
+    height: 100%;
+    margin: 0;
+}
+.highlight {
+    color: $highlight;
+}
+input[type=text], input[type=password], select {
+    font-size: 22px;
+    padding: 15px;
+    background: #00000036;
+    color: $text;
+    border-radius: 5px;
+    border: 2px solid $highlight;
+    margin-bottom: 30px;
+    width: 100%;
+    &.copytext {
+    }
+    &::placeholder {
+        color: #a7b0ca6e;
+        font-weight: 200;
+    }
+    @media all and (min-width: 900px) {
+        font-size: 15px;
+        padding: 12px;
+    }
+
+}
 .container {
-  padding: 40px 10px 15px 10px;
+  padding: 10px 10px 10px 10px;
   max-width: 800px;
 }
 .heading {
