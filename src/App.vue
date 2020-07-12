@@ -41,9 +41,9 @@
       <label for="transinputs">Transaction and signing: <span @click="showtransinfo()"><font-awesome-icon icon="question-circle"/></span></label>
       <div class="form-group" id="transinputs">
         <div class="input-group">
-          <input class="form-control col-10" type="password" placeholder="Seed" v-model="seed">
+          <input class="form-control" type="password" placeholder="Seed" v-model="seed">
           <div class="input-group-append">
-            <input class="form-control" type="number" min="0" v-model="seedindex">
+            <input class="form-control" type="number" min="0" v-model="seedindex" id="seedindex">
           </div>
         </div>
         <input class="form-control" type="text" placeholder="Transaction Hash" v-model="trans">
@@ -227,6 +227,7 @@ html, body {
     color: $highlight;
 }
 input[type=text], input[type=password], .custom-select {
+    height: 36.5px;
     background: #00000036;
     color: $text;
     border-radius: 5px;
@@ -290,5 +291,8 @@ input[type=text]:focus, input[type=password]:focus, input[type=number]:focus {
 }
 .vue-notification-group {
     padding-top: 50px;
+}
+#seedindex {
+  max-width: 60px;
 }
 </style>
