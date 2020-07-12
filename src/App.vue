@@ -1,11 +1,27 @@
 <template>
 <div id="app">
+  <modal :width="300" :height="170" :adaptive="true" name="metadatainfo">
+    <div class="modaltext">
+      You can add 32 bytes of hex to a transaction as 64 hex characters or 32 utf-8, or you can add an IPFS CID multihash to link to larger external files from compatible wallet interfaces.
+    </div>
+  </modal>
+  <modal :width="300" :height="190" :adaptive="true" name="transactioninfo">
+    <div class="modaltext">
+      All signing occurs locally, this is used as your authenticaion method with the API to confirm you own the transaction. No credentials are exposed to the server, this client sends a pubkey and signature of your signed metadata.
+    </div>
+  </modal>
+  <modal :width="300" :height="240" :adaptive="true" name="apiinfo">
+    <div class="modaltext">
+      While this page can be used to add metadata to a transaction the purpose is to show wallet developers how they can achieve this in their own software stack. Take a look at the API url below and review the GitHub repository for this frontend to see how this all can fit with your project.
+    </div>
+  </modal>
   <notifications position="top center"/>
   <div class="heading">
-    <h4>Add Metadata to transaction</h4>
+    <h4>Add Metadata to Nano transaction <font-awesome-icon @click="githublink()" :icon="['fab', 'github']" /></h4>
   </div>
   <div class="container">
-    <div class="form-group">
+    <label for="metadatainputs">Metadata: (Hex UTF-8 or IPFS CID) <span @click="showmetainfo()"><font-awesome-icon icon="question-circle"/></span></label>
+    <div class="form-group" id="metadatainputs">
       <div class="input-group">
         <input type="text" class="form-control" placeholder="utf-8" :maxlength="utfmax" v-model="utf8" />
         <div class="input-group-append">
@@ -16,18 +32,27 @@
           <span class="input-group-text" v-text="(hexmax - hex.length)"></span>
         </div>
       </div>
-      <div class="form-group input-group">
-        <input class="form-control col-10" type="password" placeholder="Seed" v-model="seed">
-        <div class="input-group-append" style="width: 60px;">
-          <input class="form-control" type="number" min="0" v-model="seedindex">
+      <div class="input-group">
+        <input class="form-control" type="text" placeholder="IPFS CID" :maxlength="ipfsmax" v-model="ipfscid">
+        <div class="input-group-append">
+          <span class="input-group-text" v-text="(ipfsmax - ipfscid.length)"></span>
         </div>
+      </div><br>
+      <label for="transinputs">Transaction and signing: <span @click="showtransinfo()"><font-awesome-icon icon="question-circle"/></span></label>
+      <div class="form-group" id="transinputs">
+        <div class="input-group">
+          <input class="form-control col-10" type="password" placeholder="Seed" v-model="seed">
+          <div class="input-group-append">
+            <input class="form-control" type="number" min="0" v-model="seedindex">
+          </div>
+        </div>
+        <input class="form-control" type="text" placeholder="Transaction Hash" v-model="trans">
+        <select class="custom-select mr-sm-2" v-model="net">
+          <option value="" disabled>Select your network</option>
+          <option value="live">Live Nano Network</option>
+          <option value="lsio">LSIO Nano Network</option>
+        </select>
       </div>
-      <input class="form-control" type="text" placeholder="Transaction Hash" v-model="trans">
-      <select class="custom-select mr-sm-2" v-model="net">
-        <option value="" disabled>Select your network</option>
-        <option value="live">Live Nano Network</option>
-        <option value="lsio">LSIO Nano Network</option>
-      </select>
       <div class="container">
         <div class="row">
           <div class="col text-center">
@@ -40,7 +65,7 @@
   <div class="container">
     <div class="col">
       <div class="form-group">
-        <label for="apiurl">API URL: <font-awesome-icon @click="copyToClipboard(apiurl)" icon="clone" /></label>
+        <label for="apiurl">API URL: <font-awesome-icon @click="copyToClipboard(apiurl)" icon="clone" /> <span @click="showapiinfo()"><font-awesome-icon icon="question-circle"/></span></label>
         <input class="form-control" type="text" id="apiurl" v-model="apiurl">
       </div>
       <div class="form-group">
@@ -55,6 +80,7 @@
 <script>
 import * as NanoCurrency from 'nanocurrency'
 import { blake2sHex } from 'blakejs'
+import { multihash } from 'is-ipfs'
 
 export default {
   name: 'App',
@@ -62,6 +88,7 @@ export default {
     return {
       utfmax: 32,
       hexmax: 64,
+      ipfsmax: 46,
       utf8: '',
       hex: '',
       seed: '',
@@ -70,7 +97,8 @@ export default {
       net: '',
       metaurl: '',
       loading: false,
-      seedindex: 0
+      seedindex: 0,
+      ipfscid: ''
     }
   },
   watch: {
@@ -86,7 +114,7 @@ export default {
     async metadata() {
       const that = this
       that.loading = true
-      if (NanoCurrency.checkHash(that.trans) && NanoCurrency.checkSeed(that.seed) && that.hex && that.net) {
+      if (NanoCurrency.checkHash(that.trans) && NanoCurrency.checkSeed(that.seed) && (that.hex || that.ipfscid) && that.net) {
         const response = await fetch('https://www.nanometadata.com/' + that.trans)
         if (response.ok) {
           that.$notify({
@@ -97,11 +125,19 @@ export default {
           that.metaurl = 'https://www.nanometadata.com/' +  that.trans
           that.loading = false
         } else {
-          const hash = blake2sHex(that.trans + that.hex).toUpperCase()
+          if ( that.ipfscid && ! multihash(that.ipfscid) ) {
+            that.$notify({
+              title: 'Error',
+              text: 'Invalid IPFS CID',
+              type: 'error'
+            })
+            return false
+          }
+          const hash = blake2sHex(that.trans + ( that.ipfscid ? that.ipfscid : that.hex )).toUpperCase()
           const privkey = NanoCurrency.deriveSecretKey(that.seed,that.seedindex)
           const pubkey = NanoCurrency.derivePublicKey(privkey)
           const sig = NanoCurrency.signBlock({ hash: hash, secretKey: privkey })
-          const params = 'trans=' + that.trans + '&data=' + that.hex + '&pub=' + pubkey + '&sig=' + sig + '&net=' + that.net
+          const params = 'trans=' + that.trans + '&data=' + ( that.ipfscid ? that.ipfscid : that.hex ) + '&pub=' + pubkey + '&sig=' + sig + '&net=' + that.net + ( that.ipfscid ? '&ipfs=true' : '' )
           that.apiurl = 'https://api.nanometadata.com/metadata?' + params
           const apiresponse = await fetch(that.apiurl)
           const apicontent = await response.text()
@@ -143,6 +179,18 @@ export default {
         text: 'Copied to clipboard',
         type: 'success'
       })
+    },
+    showmetainfo () {
+      this.$modal.show('metadatainfo');
+    },
+    showtransinfo () {
+      this.$modal.show('transactioninfo');
+    },
+    showapiinfo () {
+      this.$modal.show('apiinfo');
+    },
+    githublink () {
+      window.open('https://github.com/linuxserver/nano-metadata', '_blank')
     }
   }
 }
@@ -178,17 +226,12 @@ html, body {
 .highlight {
     color: $highlight;
 }
-input[type=text], input[type=password], select {
-    font-size: 22px;
-    padding: 15px;
+input[type=text], input[type=password], .custom-select {
     background: #00000036;
     color: $text;
     border-radius: 5px;
     border: 2px solid $highlight;
-    margin-bottom: 30px;
     width: 100%;
-    &.copytext {
-    }
     &::placeholder {
         color: #a7b0ca6e;
         font-weight: 200;
@@ -199,17 +242,53 @@ input[type=text], input[type=password], select {
     }
 
 }
+input[type=text]:focus, input[type=password]:focus, input[type=number]:focus {
+  background: #00000036;
+  color: $text;
+} 
+.input-group-text, input[type=number] {
+    height: 36.5px;
+    background: #00000036;
+    color: $text;
+    border: 2px solid $highlight;
+    &::placeholder {
+        color: #a7b0ca6e;
+        font-weight: 200;
+    }
+    @media all and (min-width: 900px) {
+        font-size: 15px;
+    }
+}
+.custom-select  {
+  height: 45px; 
+}
 .container {
   padding: 10px 10px 10px 10px;
   max-width: 800px;
 }
+.input-group-append {
+  font-size: 15px;
+}
 .heading {
+  padding-top: 20px;
   text-align: center;
+}
+.modaltext {
+  padding: 10px;
+  background: linear-gradient(to bottom, $body-bg1, $body-bg2);
+  color: $text;
+  border-radius: 5px;
+  border: 2px solid $highlight;
+  width: 100%;
+  height: 100%;
 }
 @keyframes spinner {
   to { transform: rotate(360deg); }
 }
 .fa-spinner {
   animation: spinner 1s linear infinite;
+}
+.vue-notification-group {
+    padding-top: 50px;
 }
 </style>
