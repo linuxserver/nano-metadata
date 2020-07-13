@@ -103,11 +103,23 @@ export default {
   },
   watch: {
     hex(val) {
-      let re = /[^0-9a-f]+/i;
-      this.$set(this, 'hex', val.replace(re, ''));
+      if (val) {
+        let re = /[^0-9a-f]+/i
+        this.$set(this, 'hex', val.replace(re, ''))
+        this.ipfscid = ''
+      }
     },
     utf8(val) {
-      this.$set(this, 'hex', Buffer(val).toString('hex'));
+      if (val) {
+        this.$set(this, 'hex', Buffer(val).toString('hex'))
+        this.ipfscid = ''
+      }
+    },
+    ipfscid(val) {
+      if (val) {
+        this.hex = ''
+        this.utf8 = ''
+      }
     }
   },
   methods: {
@@ -227,7 +239,7 @@ html, body {
     color: $highlight;
 }
 input[type=text], input[type=password], .custom-select {
-    height: 36.5px;
+    height: 45px;
     background: #00000036;
     color: $text;
     border-radius: 5px;
@@ -248,7 +260,7 @@ input[type=text]:focus, input[type=password]:focus, input[type=number]:focus {
   color: $text;
 } 
 .input-group-text, input[type=number] {
-    height: 36.5px;
+    height: 45px;
     background: #00000036;
     color: $text;
     border: 2px solid $highlight;
