@@ -50,6 +50,7 @@
         <select class="custom-select mr-sm-2" v-model="net">
           <option value="" disabled>Select your network</option>
           <option value="live">Live Nano Network</option>
+          <option value="banano">Live Banano Network</option>
           <option value="lsio">LSIO Nano Network</option>
         </select>
       </div>
